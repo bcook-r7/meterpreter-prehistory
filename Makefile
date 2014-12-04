@@ -2,20 +2,20 @@
 # associated stuff (openssl, libpcap, etc) this is going to get very messy,
 # very quickly.
 
-objects  = external/source/meterpreter/source/bionic/compiled/libc.so
-objects += external/source/meterpreter/source/bionic/compiled/libm.so
-objects += external/source/meterpreter/source/bionic/compiled/libdl.so
-objects += external/source/meterpreter/source/bionic/compiled/libcrypto.so
-objects += external/source/meterpreter/source/bionic/compiled/libssl.so
-objects += external/source/meterpreter/source/bionic/compiled/libsupport.so
-objects += external/source/meterpreter/source/bionic/compiled/libmetsrv_main.so
-objects += external/source/meterpreter/source/bionic/compiled/libpcap.so
+objects  = source/bionic/compiled/libc.so
+objects += source/bionic/compiled/libm.so
+objects += source/bionic/compiled/libdl.so
+objects += source/bionic/compiled/libcrypto.so
+objects += source/bionic/compiled/libssl.so
+objects += source/bionic/compiled/libsupport.so
+objects += source/bionic/compiled/libmetsrv_main.so
+objects += source/bionic/compiled/libpcap.so
 objects += data/meterpreter/msflinker_linux_x86.bin
 objects += data/meterpreter/ext_server_stdapi.lso
 objects += data/meterpreter/ext_server_sniffer.lso
 objects += data/meterpreter/ext_server_networkpug.lso
 
-BIONIC=$(PWD)/external/source/meterpreter/source/bionic
+BIONIC=$(PWD)/source/bionic
 LIBC=$(BIONIC)/libc
 LIBM=$(BIONIC)/libm
 COMPILED=$(BIONIC)/compiled
@@ -24,7 +24,7 @@ PCAP_CFLAGS = -march=i386 -m32 -Wl,--hash-style=sysv -fno-stack-protector -nostd
 
 OSSL_CFLAGS=-Os -Wl,--hash-style=sysv -march=i386 -m32 -nostdinc -nostdlib -fno-builtin -fpic -I $(LIBC)/include -I $(LIBC)/kernel/common/linux/ -I $(LIBC)/kernel/common/ -I $(LIBC)/arch-x86/include/ -I $(LIBC)/kernel/arch-x86/  -I$(LIBC)/private -I$(LIBM)/include -DPIC -Dwchar_t='char' -D_SIZE_T_DECLARED -DElf_Size='u_int32_t' -D_BYTE_ORDER=_LITTLE_ENDIAN -L$(COMPILED) -lc
 
-workspace = external/source/meterpreter/workspace
+workspace = workspace
 
 all: $(objects)
 
@@ -33,26 +33,26 @@ debug: DEBUG=true
 debug: MAKE += debug
 debug: all
 
-external/source/meterpreter/source/bionic/compiled/libc.so: external/source/meterpreter/source/bionic/compiled
-	(cd external/source/meterpreter/source/bionic/libc && ARCH=x86 TOP=${PWD} jam && cd out/x86/ && sh make.sh && [ -f libbionic.so ] )
-	cp external/source/meterpreter/source/bionic/libc/out/x86/libbionic.so external/source/meterpreter/source/bionic/compiled/libc.so
+source/bionic/compiled/libc.so: source/bionic/compiled
+	(cd source/bionic/libc && ARCH=x86 TOP=${PWD} jam && cd out/x86/ && sh make.sh && [ -f libbionic.so ] )
+	cp source/bionic/libc/out/x86/libbionic.so source/bionic/compiled/libc.so
 
-external/source/meterpreter/source/bionic/compiled:
-	mkdir external/source/meterpreter/source/bionic/compiled/
+source/bionic/compiled:
+	mkdir source/bionic/compiled/
 
-external/source/meterpreter/source/bionic/compiled/libm.so:
+source/bionic/compiled/libm.so:
 	$(MAKE) -C $(LIBM) -f msfMakefile && [ -f $(LIBM)/libm.so ]
 	cp $(LIBM)/libm.so $(COMPILED)/libm.so
 
-external/source/meterpreter/source/bionic/compiled/libdl.so:
+source/bionic/compiled/libdl.so:
 	$(MAKE) -C $(BIONIC)/libdl && [ -f $(BIONIC)/libdl/libdl.so ]
 	cp $(BIONIC)/libdl/libdl.so $(COMPILED)/libdl.so
 
-external/source/meterpreter/source/bionic/compiled/libcrypto.so: tmp/openssl-0.9.8o/libssl.so
-	cp tmp/openssl-0.9.8o/libcrypto.so external/source/meterpreter/source/bionic/compiled/libcrypto.so
+source/bionic/compiled/libcrypto.so: tmp/openssl-0.9.8o/libssl.so
+	cp tmp/openssl-0.9.8o/libcrypto.so source/bionic/compiled/libcrypto.so
 
-external/source/meterpreter/source/bionic/compiled/libssl.so: tmp/openssl-0.9.8o/libssl.so
-	cp tmp/openssl-0.9.8o/libssl.so external/source/meterpreter/source/bionic/compiled/libssl.so
+source/bionic/compiled/libssl.so: tmp/openssl-0.9.8o/libssl.so
+	cp tmp/openssl-0.9.8o/libssl.so source/bionic/compiled/libssl.so
 
 tmp/openssl-0.9.8o/libssl.so:
 	[ -d tmp ] || mkdir tmp
@@ -68,11 +68,11 @@ tmp/openssl-0.9.8o/libssl.so:
 		./Configure --prefix=/tmp/out threads shared no-hw no-dlfcn no-zlib no-krb5 no-idea 386 linux-msf \
 	)
 	(cd tmp/openssl-0.9.8o && make depend all ; [ -f libssl.so.0.9.8 -a -f libcrypto.so.0.9.8 ] )
-	mkdir -p external/source/meterpreter/source/openssl/lib/linux/i386/
-	cp tmp/openssl-0.9.8o/libssl.so* tmp/openssl-0.9.8o/libcrypto.so* external/source/meterpreter/source/openssl/lib/linux/i386/
+	mkdir -p source/openssl/lib/linux/i386/
+	cp tmp/openssl-0.9.8o/libssl.so* tmp/openssl-0.9.8o/libcrypto.so* source/openssl/lib/linux/i386/
 
-external/source/meterpreter/source/bionic/compiled/libpcap.so: tmp/libpcap-1.1.1/libpcap.so.1.1.1
-	cp tmp/libpcap-1.1.1/libpcap.so.1.1.1 external/source/meterpreter/source/bionic/compiled/libpcap.so
+source/bionic/compiled/libpcap.so: tmp/libpcap-1.1.1/libpcap.so.1.1.1
+	cp tmp/libpcap-1.1.1/libpcap.so.1.1.1 source/bionic/compiled/libpcap.so
 
 tmp/libpcap-1.1.1/libpcap.so.1.1.1:
 	[ -d tmp ] || mkdir tmp
@@ -85,29 +85,29 @@ tmp/libpcap-1.1.1/libpcap.so.1.1.1:
 	echo '#undef PCAP_SUPPORT_USB' >> tmp/libpcap-1.1.1/config.h
 	echo '#undef HAVE_ETHER_HOSTTON'  >> tmp/libpcap-1.1.1/config.h
 	echo '#define _STDLIB_H this_works_around_malloc_definition_in_grammar_dot_c' >> tmp/libpcap-1.1.1/config.h
-	(cd tmp/libpcap-1.1.1 && patch --dry-run -p0 < ../../external/source/meterpreter/source/libpcap/pcap_nametoaddr_fix.diff && patch -p0 < ../../external/source/meterpreter/source/libpcap/pcap_nametoaddr_fix.diff)
+	(cd tmp/libpcap-1.1.1 && patch --dry-run -p0 < ../../source/libpcap/pcap_nametoaddr_fix.diff && patch -p0 < ../../source/libpcap/pcap_nametoaddr_fix.diff)
 	sed -i -e s/pcap-usb-linux.c//g -e s/fad-getad.c/fad-gifc.c/g tmp/libpcap-1.1.1/Makefile
 	sed -i -e s^"CC = gcc"^"CC = gcc $(PCAP_CFLAGS)"^g tmp/libpcap-1.1.1/Makefile
 	make -C tmp/libpcap-1.1.1
 
 
-data/meterpreter/msflinker_linux_x86.bin: external/source/meterpreter/source/server/rtld/msflinker.bin
-	cp external/source/meterpreter/source/server/rtld/msflinker.bin data/meterpreter/msflinker_linux_x86.bin
+data/meterpreter/msflinker_linux_x86.bin: source/server/rtld/msflinker.bin
+	cp source/server/rtld/msflinker.bin data/meterpreter/msflinker_linux_x86.bin
 
-external/source/meterpreter/source/server/rtld/msflinker.bin: external/source/meterpreter/source/bionic/compiled/libc.so
-	$(MAKE) -C external/source/meterpreter/source/server/rtld
+source/server/rtld/msflinker.bin: source/bionic/compiled/libc.so
+	$(MAKE) -C source/server/rtld
 
 $(workspace)/metsrv/libmetsrv_main.so:
 	$(MAKE) -C $(workspace)/metsrv
 
-external/source/meterpreter/source/bionic/compiled/libmetsrv_main.so: $(workspace)/metsrv/libmetsrv_main.so
-	cp $(workspace)/metsrv/libmetsrv_main.so external/source/meterpreter/source/bionic/compiled/libmetsrv_main.so
+source/bionic/compiled/libmetsrv_main.so: $(workspace)/metsrv/libmetsrv_main.so
+	cp $(workspace)/metsrv/libmetsrv_main.so source/bionic/compiled/libmetsrv_main.so
 
 $(workspace)/common/libsupport.so:
 	$(MAKE) -C $(workspace)/common
 
-external/source/meterpreter/source/bionic/compiled/libsupport.so: $(workspace)/common/libsupport.so
-	cp $(workspace)/common/libsupport.so external/source/meterpreter/source/bionic/compiled/libsupport.so
+source/bionic/compiled/libsupport.so: $(workspace)/common/libsupport.so
+	cp $(workspace)/common/libsupport.so source/bionic/compiled/libsupport.so
 
 $(workspace)/ext_server_sniffer/ext_server_sniffer.so:
 	$(MAKE) -C $(workspace)/ext_server_sniffer
@@ -131,13 +131,13 @@ data/meterpreter/ext_server_networkpug.lso: $(workspace)/ext_server_networkpug/e
 
 clean:
 	rm -f $(objects)
-	(cd external/source/meterpreter/source/server/rtld/ && make clean)
+	(cd source/server/rtld/ && make clean)
 	(cd $(workspace) && make clean)
 
 depclean:
-	rm -f external/source/meterpreter/source/bionic/lib*/*.o
-	find external/source/meterpreter/source/bionic/ -name '*.a' -print0 | xargs -0 rm -f 2>/dev/null
-	rm -f external/source/meterpreter/source/bionic/lib*/*.so
+	rm -f source/bionic/lib*/*.o
+	find source/bionic/ -name '*.a' -print0 | xargs -0 rm -f 2>/dev/null
+	rm -f source/bionic/lib*/*.so
 
 clean-pcap:
 	#(cd tmp/libpcap-1.1.1/ && make clean)
